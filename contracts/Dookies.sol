@@ -20,7 +20,7 @@ contract Dookies  {
         string name; //name of ad
         address owner; //wallet of owner
         string adCreative; //IPFS link
-        uint256 maxBudget; //Amount of GHO use is willing to spend
+        uint256 storedValue; //Amount of GHO use is willing to spend
         bool paused; //Is contract paused/OFF or ON
         //string targetAudience; //A , seperated list of tags for ad matching engine
         //uint256 freqAds; //frequency of ads shown per user per day
@@ -60,7 +60,7 @@ contract Dookies  {
             name: _name,
             owner: msg.sender,
             adCreative: _adCreative,
-            maxBudget: msg.value,
+            storedValue: msg.value,
             paused: false
         });
         adList.push(newAd);
