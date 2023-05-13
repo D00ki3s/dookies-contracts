@@ -16,7 +16,7 @@ const BET_PRICE = 1
 const BET_FEE = 0.2
 const TOKEN_RATIO = 1
 
-const PURCHASE_AMOUNT = "0.01"
+const PURCHASE_AMOUNT = "10"
 
 async function main() {
     await initAccounts()
@@ -34,7 +34,7 @@ async function initContracts() {
     await token.deployed()
 
     const tx = await token.connect(accounts[0]).mint(accounts[1].address, {
-        value: ethers.utils.parseEther(PURCHASE_AMOUNT),
+        value: ethers.utils.parseEther("100"),
     })
     tx.wait()
 
@@ -68,7 +68,7 @@ function menuOptions(rl: readline.Interface) {
                 case 1:
                     rl.question("Add an Ad Campaign\n", async (name) => {
                         try {
-                            await addAdCampaign(name)
+                            await addAddCampaign(name)
                         } catch (error) {
                             console.log("error\n")
                             console.log({ error })
@@ -205,9 +205,16 @@ function menuOptions(rl: readline.Interface) {
 }
 
 async function addAddCampaign(name: string) {
-    const tx = await dookies.connect(accounts[0]).registerAdCampaign(name, "ipfs://dookie-bla")
+    const appr = await token.connect(accounts[1]).approve(dookies.address, PURCHASE_AMOUNT)
+    appr.wait()
+    const tx = await dookies.connect(accounts[1]).registerAdCampaign(
+      name, "ipfs://dookie-bla", 1)
     tx.wait()
-    const rName = await dookies.adLookup(accounts[0].address).name
+    const balBN = await token.balanceOf(accounts[1].address)
+    const bal = ethers.utils.formatEther(balBN)
+    console.log(`after register - The balance of ${accounts[1].address} is ${bal} GHO`)
+
+    const rName = await dookies.connect(accounts[1]).dookiesToken
     console.log(`The restaurant registered is ${rName}\n`)
 }
 

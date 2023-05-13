@@ -27,7 +27,7 @@ contract Dookies  {
         //string timezone; //A , seperated list of timezones when the ad is displayed
     }
     AdCampaign[] public adList;
-    mapping(string => AdCampaign) public adLookup;
+    mapping(address => AdCampaign) public adLookup;
 
     /// @dev List of Valid publishers and mapping of Ads and Publishers
     address[] public publisherList;
@@ -49,28 +49,47 @@ contract Dookies  {
         owner = msg.sender;
     }
 
-    /// @dev register the AdCampaign
+    /// @dev register the AdCampaign --needs to be called by Advertiser wallet
     /// @dev will be called to create a new Ad Campaign
     function registerAdCampaign(
         string memory _name, //name of ad
-        string memory _adCreative //IPFS link
-    ) public payable {
+        string memory _adCreative, //IPFS link
+        uint256 _amount
+    ) public {
 
         AdCampaign memory newAd = AdCampaign({
             name: _name,
             owner: msg.sender,
             adCreative: _adCreative,
-            storedValue: msg.value,
+            storedValue: _amount,
             paused: false
         });
         adList.push(newAd);
-        adLookup[_name] = newAd;
+        adLookup[owner] = newAd;
 
         IERC20(dookiesToken).safeTransferFrom(
             msg.sender,
             address(this),
-            msg.value
+            _amount
         );
+    }
+
+    /// @dev will be called by Dookie to transfer fund from Adv to Publisher.
+    ///Need to PAY FIRST before displaying the ad.
+    function payPublisher(
+        address _advertiser,
+        address _publisher,
+        uint256 _priceForAd
+    ) public onlyByOwner {
+
+        require(adLookup[_advertiser].paused == true, "advtr not found");
+        require(_priceForAd > adLookup[_advertiser].storedValue, "not enough stor value");
+        IERC20(dookiesToken).safeTransferFrom(
+            address(this),
+            _publisher,
+            _priceForAd
+        );
+        adLookup[_advertiser].storedValue -= _priceForAd;
     }
 
 
